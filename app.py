@@ -41,16 +41,16 @@ def handle_message(message):
         
         # Resend the forwarded content in real time
         if message.text:
-            bot.send_message(message.chat.id, f"Forwarded message detected:\n{message.text}")
+            bot.send_message(message.chat.id, f"Is it Useful?:\n{message.text}")
         elif message.photo:
             file_id = message.photo[-1].file_id
-            bot.send_photo(message.chat.id, file_id, caption="Forwarded photo detected!")
+            bot.send_photo(message.chat.id, file_id, caption="Copyright Photo!")
         elif message.document:
             file_id = message.document.file_id
-            bot.send_document(message.chat.id, file_id, caption="Forwarded document detected!")
+            bot.send_document(message.chat.id, file_id, caption="Copyright Document!")
         elif message.video:
             file_id = message.video.file_id
-            bot.send_video(message.chat.id, file_id, caption="Forwarded video detected!")
+            bot.send_video(message.chat.id, file_id, caption="Copyright video!")
     else:
         # Ignore non-forwarded messages
         pass

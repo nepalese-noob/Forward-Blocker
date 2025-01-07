@@ -18,6 +18,11 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # Flask App
 app = Flask(__name__)
 
+# Route for the root page to check if the server is running
+@app.route('/')
+def home():
+    return "Bot is running!"
+
 # Route for Telegram Webhook
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def telegram_webhook():
@@ -31,6 +36,9 @@ def telegram_webhook():
 def handle_message(message):
     # Check if the message is forwarded
     if message.forward_date:
+        # Delete the original forwarded message
+        bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        
         # Resend the forwarded content in real time
         if message.text:
             bot.send_message(message.chat.id, f"Forwarded message detected:\n{message.text}")
@@ -50,4 +58,4 @@ def handle_message(message):
 # Run Flask App Locally (for testing)
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-  
+    

@@ -1,6 +1,7 @@
 from flask import Flask, request
 import telebot
 import os
+import re
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
@@ -42,8 +43,8 @@ def get_bikram_samwat_date():
         if response.status_code == 200:
             data = response.json()
             return data.get('bs', "Unknown Date")
-    except:
-        return "Error fetching Bikram Samwat date"
+    except Exception as e:
+        print(f"Error fetching Bikram Samwat date: {e}")
     return "Unknown Date"
 
 # Bot Logic: Handle forwarded messages and notify the sender and admin
@@ -54,13 +55,22 @@ def handle_message(message):
         sender_name = f"{message.from_user.first_name} {message.from_user.last_name or ''}".strip()
         sender_username = f"@{message.from_user.username}" if message.from_user.username else "No username"
 
-        # Delete the original forwarded message
+        # Check if the forwarded message contains YouTube links
+        if message.text and re.search(r'https?://(?:www\.)?youtube\.com/watch\?v=[\w-]+', message.text):
+            try:
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+                print("Deleted YouTube link message")
+            except Exception as e:
+                print(f"Error deleting message: {e}")
+            return
+
+        # Delete the original forwarded message (if not YouTube link)
         try:
             bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        except:
-            pass
+        except Exception as e:
+            print(f"Error deleting message: {e}")
 
-        # Resend the forwarded content
+        # Resend the forwarded content (except for YouTube links)
         bikram_samwat_date = get_bikram_samwat_date()
         if message.text:
             content = f"{bikram_samwat_date}\nIs it Useful?:\n{message.text}"
@@ -82,8 +92,8 @@ def handle_message(message):
                 f"Dear {sender_name},\n\nThank you for forwarding content to the group. "
                 f"We've processed your message. If you need assistance, feel free to reach out!"
             )
-        except:
-            pass
+        except Exception as e:
+            print(f"Error notifying sender: {e}")
 
         # Notify the admin
         try:
@@ -94,9 +104,10 @@ def handle_message(message):
                 f"- Content Type: {'Text' if message.text else 'Media'}\n"
                 f"- Bikram Samwat Date: {bikram_samwat_date}"
             )
-        except:
-            pass
+        except Exception as e:
+            print(f"Error notifying admin: {e}")
 
 # Run Flask App Locally or on Render
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv('PORT', 5000)))
+    
